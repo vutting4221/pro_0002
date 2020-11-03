@@ -1,7 +1,7 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy WAR app to Azure Web App - botsevices
+name: Build and deploy Python app to Azure Web App - botsevices
 
 on:
   push:
@@ -10,27 +10,29 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: 'windows-latest'
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@master
 
-    - name: Setup MSBuild path
-      uses: microsoft/setup-msbuild@v1.0.0
+    - name: Set up Python version
+      uses: actions/setup-python@v1
+      with:
+        python-version: '3.6'
 
-    - name: Setup NuGet
-      uses: NuGet/setup-nuget@v1.0.2
+    - name: Install Python dependencies
+      run: |
+        python3 -m venv env
+        .\env\Scripts\activate
+        pip install -r requirements.txt
 
-    - name: Restore NuGet packages
-      run: nuget restore
+    - name: Zip the application files
+      run: Compress-Archive .\* app.zip
 
-    - name: Publish to folder
-      run: msbuild /p:Configuration=Release /p:DeployOnBuild=true /t:WebPublish /p:WebPublishMethod=FileSystem /p:publishUrl=./published/ /p:PackageAsSingleFile=false
-
-    - name: Deploy to Azure Web App
+    - name: 'Deploy to Azure Web App'
       uses: azure/webapps-deploy@v2
       with:
         app-name: 'botsevices'
         slot-name: 'production'
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile_ba66f99409554e43833ba398aae86b59 }}
-        package: ./published/
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_c1e7b5e8b8d448deb19acc720ffdb610 }}
+        package: '.\myapp.zip'
